@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.DateTimeException;
@@ -81,8 +85,9 @@ public class ClientThread extends Thread {
     private void processCommand(String command,  PrintWriter out)
     {
         System.out.println("Server command received: " + command);
-
-        switch (command)
+        String [] args = command.split(" ",2);
+        String commandIndex = args[0];
+        switch (commandIndex)
         {
             case "1":
                 LocalDateTime now = LocalDateTime.now();
@@ -122,7 +127,53 @@ public class ClientThread extends Thread {
                 }
                 catch(Exception e) {
                     out.println("CPU: " + e.getMessage());
-            }
+                }
+
+            case "3":
+                out.println("Server location based weather: ");
+
+                if(args.length < 2 || args[1].trim().length() == 0)
+                {
+                    out.println("Error: No location specified");
+                    break;
+                }
+
+                String location = args[1].trim();
+
+                try
+                {
+                    String formattedLocation = location.replace(" ", "%20");
+                    String geoURL = "https://geocoding-api.open-meteo.com/v1/search?name=" + formattedLocation + "&count=1";
+
+                    String geoResponse = makeHttpRequest(geoURL); // to do : implement this function!!!!!!
+
+                    if(!geoResponse.contains("\"results\"")
+                    {
+                        out.println("Error: No information found");
+                        break;
+                    }
+
+                    String lat = extractJsonValue(geoResponse, "\"latitude\":");
+                    String lon = extractJsonValue(geoResponse, "\"longitude\":");
+
+                    String weatherURL = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true";
+                    String weatherResponse = makeHttpRequest(weatherURL);
+
+                    String temperature = extractJsonValue(weatherResponse, "\"temperature\":");
+
+                    out.println("Location: " + formattedLocation);
+                    out.println("Temperature: " + temperature);
+                }
+                catch(Exception e)
+                {
+                    out.println("Error: " + e.getMessage());
+                }
+
+                System.out.println(" ------------------------------ ");
+                break;
+
+            case "4":
+                System.out.println("Coming soon...");
         }
 
         out.println("EOF");
@@ -152,5 +203,26 @@ public class ClientThread extends Thread {
             return "Read error in runBashCommand: " + e.getMessage();
         }
         return sb.toString().trim();
+    }
+
+    private String extractJsonValue(String json, String key)
+    {
+        int keyIndex = json.indexOf(key);
+        if(keyIndex == -1) return "Nothing";
+
+        int startIndex = keyIndex + key.length();
+        int endIndex = json.indexOf(",", startIndex);
+
+        if(endIndex == -1) return "Nothing";
+
+        return json.substring(startIndex, endIndex).trim();
+    }
+
+    private String  makeHttpRequest(String url) throws IOException
+    {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.body();
     }
 }

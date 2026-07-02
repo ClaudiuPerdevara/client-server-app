@@ -41,8 +41,17 @@ public class Client {
             {
                 System.out.print("> ");
                 String userInput = scanner.nextLine();
+                String message = userInput;
 
-                out.println(userInput);
+                if(userInput.equals("3"))
+                {
+                    System.out.println("Please write a location: ");
+                    String location = scanner.nextLine();
+
+                    message = message + " " + location;
+                }
+
+                out.println(message);
 
                 if(userInput.trim().equals("exit") || userInput.trim().equals("5"))
                 {
