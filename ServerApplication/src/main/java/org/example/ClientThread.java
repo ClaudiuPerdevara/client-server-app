@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public class ClientThread extends Thread {
@@ -77,7 +79,14 @@ public class ClientThread extends Thread {
     {
         System.out.println("Server command received: " + command);
 
-        out.println("Server is processing command: " + command);
+        switch (command)
+        {
+            case "1":
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter myFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                out.println("Server Date & Time: "+ now.format(myFormat));
+
+        }
 
         out.println("EOF");
     }

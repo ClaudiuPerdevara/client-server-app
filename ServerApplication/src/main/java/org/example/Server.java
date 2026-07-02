@@ -7,7 +7,8 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// how to run: java -cp out org.example.Server 6767
+// how to run: javac -d out src/main/java/org/example/*.java
+// java -cp out org.example.Server 6767
 
 public class Server
 {
