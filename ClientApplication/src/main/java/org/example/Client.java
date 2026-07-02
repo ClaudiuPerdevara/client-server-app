@@ -50,7 +50,6 @@ public class Client {
                     break;
                 }
 
-                System.out.println("Server's answear: ");
                 readServerData(in);
 
                 System.out.print("\nPress ENTER to continue...");

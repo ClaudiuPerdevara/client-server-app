@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
 
 
 public class ClientThread extends Thread {
@@ -86,8 +89,68 @@ public class ClientThread extends Thread {
                 DateTimeFormatter myFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
                 out.println("Server Date & Time: "+ now.format(myFormat));
 
+            case "2":
+                out.println("Server OS info: ");
+                String osLine = runBashCommand("grep PRETTY_NAME /etc/os-release");
+                out.println("OS: " + osLine.replace("PRETTY_NAME=", "").replace("\"", ""));
+
+                String uptimeLine = runBashCommand("uptime -p");
+                out.println("Uptime: " + uptimeLine);
+
+                try
+                {
+                    for(String line : Files.readAllLines(Paths.get("/proc/cpuinfo")))
+                    {
+                        if(line.startsWith("model name"))
+                        {
+                            out.println("CPU: " + line.split(":")[1].trim());
+                            break;
+                        }
+                    }
+                }
+                catch(Exception e)
+                {
+                    out.println("CPU: " + e.getMessage());
+                }
+
+                try {
+                    Scanner s = new Scanner(runBashCommand("free -h"));
+                    while(s.hasNextLine())
+                    {
+                        out.println(s.nextLine());
+                    }
+                }
+                catch(Exception e) {
+                    out.println("CPU: " + e.getMessage());
+            }
         }
 
         out.println("EOF");
+    }
+
+    private String runBashCommand(String command)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        try
+        {
+            ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+
+            while((line = reader.readLine()) != null)
+            {
+                sb.append(line).append("\n");
+            }
+
+            process.waitFor();
+        }
+        catch(Exception e)
+        {
+            return "Read error in runBashCommand: " + e.getMessage();
+        }
+        return sb.toString().trim();
     }
 }
