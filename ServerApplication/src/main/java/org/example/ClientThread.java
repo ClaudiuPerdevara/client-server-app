@@ -93,6 +93,7 @@ public class ClientThread extends Thread {
                 LocalDateTime now = LocalDateTime.now();
                 DateTimeFormatter myFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
                 out.println("Server Date & Time: "+ now.format(myFormat));
+                break;
 
             case "2":
                 out.println("Server OS info: ");
@@ -128,6 +129,7 @@ public class ClientThread extends Thread {
                 catch(Exception e) {
                     out.println("CPU: " + e.getMessage());
                 }
+                break;
 
             case "3":
                 out.println("Server location based weather: ");
@@ -147,7 +149,7 @@ public class ClientThread extends Thread {
 
                     String geoResponse = makeHttpRequest(geoURL); // to do : implement this function!!!!!!
 
-                    if(!geoResponse.contains("\"results\"")
+                    if(!geoResponse.contains("\"results\""))
                     {
                         out.println("Error: No information found");
                         break;
@@ -158,6 +160,10 @@ public class ClientThread extends Thread {
 
                     String weatherURL = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true";
                     String weatherResponse = makeHttpRequest(weatherURL);
+
+                    int blockIndex = weatherResponse.indexOf("\"current_weather\":");
+                    if (blockIndex != -1)
+                        weatherResponse = weatherResponse.substring(blockIndex);
 
                     String temperature = extractJsonValue(weatherResponse, "\"temperature\":");
 
@@ -173,7 +179,8 @@ public class ClientThread extends Thread {
                 break;
 
             case "4":
-                System.out.println("Coming soon...");
+                out.println("Coming soon...");
+                break;
         }
 
         out.println("EOF");
@@ -213,12 +220,15 @@ public class ClientThread extends Thread {
         int startIndex = keyIndex + key.length();
         int endIndex = json.indexOf(",", startIndex);
 
+        if(endIndex == -1)
+            endIndex = json.indexOf("}", startIndex);
+
         if(endIndex == -1) return "Nothing";
 
         return json.substring(startIndex, endIndex).trim();
     }
 
-    private String  makeHttpRequest(String url) throws IOException
+    private String  makeHttpRequest(String url) throws Exception
     {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
