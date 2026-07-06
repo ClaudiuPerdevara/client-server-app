@@ -177,8 +177,10 @@ public class ClientThread extends Thread {
             case "4":
 
                 if(args.length < 2)
+                {
                     out.println("Error: No file size specified");
-
+                    break;
+                }
                 try{
                     int fileSize = Integer.parseInt(args[1]);
                     byte[] zipBytes = new byte[fileSize];
@@ -198,10 +200,10 @@ public class ClientThread extends Thread {
                     //i have read the bytes from the file
                     //now i'll save the file in a tempDir
                     Path tempDir = Files.createTempDirectory("server_");
-                    Path zipPath = tempDir.resolve(args[1]);
+                    Path zipPath = tempDir.resolve("source.zip");
                     Files.write(zipPath, zipBytes);
 
-                    String pathAbsolute = zipPath.toAbsolutePath().toString();
+                    String pathAbsolute = tempDir.toAbsolutePath().toString();
 
                     runBashCommand("cd " + pathAbsolute + " && unzip -o -q source.zip"); // unzipping
 
@@ -230,33 +232,72 @@ public class ClientThread extends Thread {
                     }
 
                     String commandToExecute = new String();
+                    boolean executed = false;
 
                     if(isJava)
                     {
                         commandToExecute = "javac *.java 2>&1 && java Main 2>&1";
+                        String linuxResult = runBashCommand("cd "+ pathAbsolute + " && " +  commandToExecute);
+                        executed = true;
+                        if(linuxResult.isEmpty())
+                        {
+                            out.println("Java program executed. No output returned.");
+                        }
+                        else
+                        {
+                            out.println(linuxResult);
+                        }
                     }
-                    else if(isC)
+
+                    if(isC)
                     {
                         commandToExecute = "gcc *.c -o program 2>&1 && ./program 2>&1";
+                        String linuxResult = runBashCommand("cd "+ pathAbsolute + " && " +  commandToExecute);
+                        executed = true;
+                        if(linuxResult.isEmpty())
+                        {
+                            out.println("C program executed. No output returned.");
+                        }
+                        else
+                        {
+                            out.println(linuxResult);
+                        }
                     }
-                    else if(isCpp)
+
+                    if(isCpp)
                     {
                         commandToExecute = "g++ *.cpp -o program 2>&1 && ./program 2>&1";
+                        String linuxResult = runBashCommand("cd "+ pathAbsolute + " && " +  commandToExecute);
+                        executed = true;
+                        if(linuxResult.isEmpty())
+                        {
+                            out.println("C++ program executed. No output returned.");
+                        }
+                        else
+                        {
+                            out.println(linuxResult);
+                        }
                     }
-                    else if(isPython)
+
+                    if(isPython)
                     {
                         commandToExecute = "python3 " + pythonScript + " 2>&1";
+                        String linuxResult = runBashCommand("cd "+ pathAbsolute + " && " +  commandToExecute);
+                        executed = true;
+                        if(linuxResult.isEmpty())
+                        {
+                            out.println("Python program executed. No output returned.");
+                        }
+                        else
+                        {
+                            out.println(linuxResult);
+                        }
                     }
 
-                    String linuxResult = runBashCommand("cd "+ pathAbsolute + " && " +  commandToExecute);
-
-                    if(linuxResult.isEmpty())
+                    if(!executed)
                     {
-                        out.println("Program executed. No output returned.");
-                    }
-                    else
-                    {
-                        out.println(linuxResult);
+                        out.println("Error: No valid file to compile found");
+                        break;
                     }
 
                     runBashCommand("rm -rf " + pathAbsolute);

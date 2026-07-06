@@ -42,7 +42,7 @@ public class Client {
             while(true)
             {
                 System.out.print("> ");
-                String userInput = scanner.nextLine();
+                String userInput = scanner.nextLine().trim();
                 String message = userInput;
 
                 if(userInput.equals("3"))
