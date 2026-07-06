@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 //how to run: java -cp out org.example.Client 6767
@@ -50,8 +52,32 @@ public class Client {
 
                     message = message + " " + location;
                 }
+                else if(userInput.equals("4"))
+                {
+                    System.out.println("Please write the absolute path to a ZIP file: ");
+                    String zipPath = scanner.nextLine();
 
-                out.println(message);
+                    try
+                    {
+                        byte[] bytes = Files.readAllBytes(Paths.get(zipPath));
+
+                        out.println("4 "+ bytes.length);
+                        Thread.sleep(200);
+
+                        socket.getOutputStream().write(bytes);
+                        socket.getOutputStream().flush();
+
+                        System.out.println("Uploading file ");
+                    }
+                    catch(Exception e)
+                    {
+                        System.out.println("Error reading the ZIP file: " + e.getMessage());
+                        continue;
+                    }
+                }
+                else {
+                    out.println(message);
+                }
 
                 if(userInput.trim().equals("exit") || userInput.trim().equals("5"))
                 {

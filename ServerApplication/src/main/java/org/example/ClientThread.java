@@ -1,19 +1,16 @@
 package org.example;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.Scanner;
 
 
@@ -132,7 +129,6 @@ public class ClientThread extends Thread {
                 break;
 
             case "3":
-                out.println("Server location based weather: ");
 
                 if(args.length < 2 || args[1].trim().length() == 0)
                 {
@@ -179,7 +175,97 @@ public class ClientThread extends Thread {
                 break;
 
             case "4":
-                out.println("Coming soon...");
+
+                if(args.length < 2)
+                    out.println("Error: No file size specified");
+
+                try{
+                    int fileSize = Integer.parseInt(args[1]);
+                    byte[] zipBytes = new byte[fileSize];
+
+                    InputStream is = socket.getInputStream();
+                    int totalRead = 0;
+
+                    while(totalRead < fileSize)
+                    {
+                        int bytesRead = is.read(zipBytes, totalRead, fileSize-totalRead);
+                        if(bytesRead == -1)
+                            break;
+
+                        totalRead += bytesRead;
+                    }
+
+                    //i have read the bytes from the file
+                    //now i'll save the file in a tempDir
+                    Path tempDir = Files.createTempDirectory("server_");
+                    Path zipPath = tempDir.resolve(args[1]);
+                    Files.write(zipPath, zipBytes);
+
+                    String pathAbsolute = zipPath.toAbsolutePath().toString();
+
+                    runBashCommand("cd " + pathAbsolute + " && unzip -o -q source.zip"); // unzipping
+
+                    boolean isJava = false;
+                    boolean isC = false;
+                    boolean isCpp = false;
+                    boolean isPython = false;
+
+                    File folder = tempDir.toFile();
+                    File[] files = folder.listFiles();
+                    String pythonScript = "";
+
+                    if(files != null)
+                    {
+                        for(File f : files)
+                        {
+                            String fileName = f.getName();
+                            if(fileName.toLowerCase().endsWith(".py")) {
+                                isPython = true;
+                                pythonScript = f.getName();
+                            }
+                            else if(fileName.toLowerCase().endsWith(".cpp")) isCpp = true;
+                            else if(fileName.toLowerCase().endsWith(".java")) isJava = true;
+                            else if(fileName.toLowerCase().endsWith(".c")) isC = true;
+                        }
+                    }
+
+                    String commandToExecute = new String();
+
+                    if(isJava)
+                    {
+                        commandToExecute = "javac *.java 2>&1 && java Main 2>&1";
+                    }
+                    else if(isC)
+                    {
+                        commandToExecute = "gcc *.c -o program 2>&1 && ./program 2>&1";
+                    }
+                    else if(isCpp)
+                    {
+                        commandToExecute = "g++ *.cpp -o program 2>&1 && ./program 2>&1";
+                    }
+                    else if(isPython)
+                    {
+                        commandToExecute = "python3 " + pythonScript + " 2>&1";
+                    }
+
+                    String linuxResult = runBashCommand("cd "+ pathAbsolute + " && " +  commandToExecute);
+
+                    if(linuxResult.isEmpty())
+                    {
+                        out.println("Program executed. No output returned.");
+                    }
+                    else
+                    {
+                        out.println(linuxResult);
+                    }
+
+                    runBashCommand("rm -rf " + pathAbsolute);
+                }
+                catch (Exception e)
+                {
+                    out.println("Error: " + e.getMessage());
+                }
+
                 break;
         }
 
