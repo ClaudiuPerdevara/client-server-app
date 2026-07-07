@@ -62,12 +62,19 @@ public class Client {
                         byte[] bytes = Files.readAllBytes(Paths.get(zipPath));
 
                         out.println("4 "+ bytes.length);
-                        Thread.sleep(200);
 
-                        socket.getOutputStream().write(bytes);
-                        socket.getOutputStream().flush();
+                        String ack = in.readLine(); //waiting for ACK signal from server
 
-                        System.out.println("Uploading file ");
+                        if(ack != null && ack.equals("ACK"))
+                        {
+                            socket.getOutputStream().write(bytes);
+                            socket.getOutputStream().flush();
+                            System.out.println("Uploading file ");
+                        }
+                        else
+                        {
+                            System.out.println("Error: Server not ready to send zip!");
+                        }
                     }
                     catch(Exception e)
                     {

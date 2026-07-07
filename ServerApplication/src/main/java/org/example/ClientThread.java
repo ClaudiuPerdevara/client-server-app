@@ -181,6 +181,9 @@ public class ClientThread extends Thread {
                     out.println("Error: No file size specified");
                     break;
                 }
+
+                out.println("ACK");
+
                 try{
                     int fileSize = Integer.parseInt(args[1]);
                     byte[] zipBytes = new byte[fileSize];
