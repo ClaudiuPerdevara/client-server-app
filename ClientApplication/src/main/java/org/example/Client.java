@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 //how to run: java -cp out org.example.Client 6767
@@ -40,7 +42,7 @@ public class Client {
             while(true)
             {
                 System.out.print("> ");
-                String userInput = scanner.nextLine();
+                String userInput = scanner.nextLine().trim();
                 String message = userInput;
 
                 if(userInput.equals("3"))
@@ -50,8 +52,39 @@ public class Client {
 
                     message = message + " " + location;
                 }
+                else if(userInput.equals("4"))
+                {
+                    System.out.println("Please write the absolute path to a ZIP file: ");
+                    String zipPath = scanner.nextLine();
 
-                out.println(message);
+                    try
+                    {
+                        byte[] bytes = Files.readAllBytes(Paths.get(zipPath));
+
+                        out.println("4 "+ bytes.length);
+
+                        String ack = in.readLine(); //waiting for ACK signal from server
+
+                        if(ack != null && ack.equals("ACK"))
+                        {
+                            socket.getOutputStream().write(bytes);
+                            socket.getOutputStream().flush();
+                            System.out.println("Uploading file ");
+                        }
+                        else
+                        {
+                            System.out.println("Error: Server not ready to send zip!");
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        System.out.println("Error reading the ZIP file: " + e.getMessage());
+                        continue;
+                    }
+                }
+                else {
+                    out.println(message);
+                }
 
                 if(userInput.trim().equals("exit") || userInput.trim().equals("5"))
                 {
