@@ -12,7 +12,7 @@ if ! [[ $PORT =~ ^[0-9]+$ ]]; then
 	exit 1
 fi
 
-echo "Server is starting on PORT $PORT..."
+echo "Server is starting on PORT ${PORT}..."
 java -cp out org.example.Server $PORT
 
 
