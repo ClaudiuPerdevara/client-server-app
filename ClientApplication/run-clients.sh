@@ -26,8 +26,8 @@ for i in {1..100}; do
 			output=$(java -cp out org.example.Client $PORT $option 2>&1)
 		fi
 
-		printf "Client %s: option %s \n %s \n --------------------\n" "$i" "$option" "$output"
+		printf "Client %s: option %s\n%s \n --------------------\n" "$i" "$option" "$output"
 	) &
 done
 
-
+wait
